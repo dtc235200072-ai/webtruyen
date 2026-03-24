@@ -1,0 +1,60 @@
+{% extends 'stories/base.html' %}
+
+{% block content %}
+<button onclick="toggleDarkMode()">
+    🌙 Đổi chế độ đọc
+</button>
+
+<h3>🎧 Nghe truyện</h3>
+
+{% if audio_url %}
+    <audio controls style="width:100%; margin-top:10px;">
+        <source src="{{ audio_url }}" type="audio/mpeg">
+        Trình duyệt không hỗ trợ audio.
+    </audio>
+{% else %}
+    <p style="color:#888;"><i>Chưa có audio cho chương này.</i></p>
+{% endif %}
+
+
+<hr>
+
+<h1 style="margin-bottom:10px;">
+    Chương {{ chapter.number }}: {{ chapter.title }}
+</h1>
+
+<div style="
+    font-size:18px;
+    line-height:1.8;
+    white-space:pre-line;
+">
+    {{ chapter.content }}
+</div>
+
+
+<hr>
+
+<div style="display:flex; justify-content: space-between;">
+    {% if prev_chapter %}
+        <a class="btn-nav" href="{% url 'chapter_detail' prev_chapter.id %}">
+            ⬅ Chap trước
+        </a>
+    {% else %}
+        <span></span>
+    {% endif %}
+
+    {% if next_chapter %}
+        <a class="btn-nav" href="{% url 'chapter_detail' next_chapter.id %}">
+            Chap sau ➡
+        </a>
+    {% endif %}
+</div>
+
+<br>
+
+<a href="{% url 'story_detail' chapter.story.id %}">
+    ⬅ Quay lại truyện
+</a>
+
+
+{% endblock %}

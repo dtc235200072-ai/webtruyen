@@ -1,0 +1,136 @@
+{% extends 'stories/base.html' %}
+
+{% block title %}Đăng nhập{% endblock %}
+
+{% block content %}
+
+<style>
+.login-container {
+    max-width: 500px;
+    margin: 40px auto;
+    background: #fff;
+    padding: 30px;
+    border-radius: 8px;
+}
+
+/* tiêu đề */
+.login-title {
+    font-size: 28px;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+.login-title::after {
+    content: "";
+    display: block;
+    width: 60px;
+    height: 3px;
+    background: #e91e63;
+    margin-top: 5px;
+}
+
+/* input */
+.login-group {
+    margin-bottom: 20px;
+}
+
+.login-group label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.login-group input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+}
+
+/* link nhỏ */
+.login-links {
+    text-align: right;
+    margin-bottom: 15px;
+}
+
+.login-links a {
+    margin-left: 10px;
+    font-size: 14px;
+    color: #3498db;
+    text-decoration: none;
+}
+
+/* nút đăng nhập */
+.btn-login {
+    width: 100%;
+    padding: 12px;
+    background: #f1c40f;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* nút google */
+.btn-google {
+    width: 100%;
+    padding: 12px;
+    margin-top: 15px;
+    background: #e74c3c;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+}
+.login-group input:focus {
+    outline: none;
+    border-color: #ff7a18;
+    box-shadow: 0 0 5px rgba(255,122,24,0.3);
+}
+</style>
+
+<div class="login-container">
+
+    <div class="login-title">ĐĂNG NHẬP</div>
+
+    <form method="POST">
+        {% csrf_token %}
+
+        <div class="login-group">
+            <label>Email</label>
+            <input type="text" name="username" placeholder="Tên đăng nhập">
+        </div>
+
+        <div class="login-group">
+            <label>Mật khẩu</label>
+            <div style="position: relative;">
+                <input type="password" name="password" id="password" placeholder="Mật khẩu">
+
+                <span onclick="togglePassword()" 
+                    style="position:absolute; right:12px; top:50%; transform:translateY(-50%); cursor:pointer; color:#888;">
+                    👁
+                </span>
+            </div>
+        </div>
+
+        <div class="login-links">
+            <a href="#">Quên mật khẩu</a>
+            <a href="{% url 'register' %}">Đăng ký</a>
+        </div>
+
+        <button type="submit" class="btn-login">Đăng nhập</button>
+
+
+        {% if form.errors %}
+            <p style="color:red;">Sai tài khoản hoặc mật khẩu</p>
+        {% endif %}
+
+    </form>
+
+</div>
+<script>
+function togglePassword() {
+    let input = document.getElementById("password");
+    input.type = input.type === "password" ? "text" : "password";
+}
+</script>
+{% endblock %}

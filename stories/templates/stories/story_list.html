@@ -1,0 +1,401 @@
+{% extends 'stories/base.html' %}
+
+{% block title %}Danh sách truyện{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+
+<style>
+    /* ===== CẤU TRÚC CHUNG ===== */
+    .section-title {
+        font-size: 18px; font-weight: bold; margin: 25px 0 15px 0;
+        color: #333; display: flex; align-items: center; text-transform: uppercase;
+    }
+    .section-title span { margin-right: 10px; color: #ff7a18; }
+    .section-title::after { content: ""; flex: 1; height: 1px; background: #eee; margin-left: 15px; }
+
+    /* ===== TRUYỆN ĐỀ CỬ (SLIDER) ===== */
+    .recommend-swiper { width: 100%; padding-bottom: 20px; }
+    .recommend-card { position: relative; border-radius: 4px; overflow: hidden; aspect-ratio: 3/4; background: #f0f0f0; }
+    .recommend-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .recommend-overlay { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0, 0, 0, 0.75); color: #fff; padding: 8px 10px; }
+    .recommend-name { font-size: 14px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    /* ===== BỐ CỤC CHÍNH 2 CỘT ===== */
+    .main-layout { display: grid; grid-template-columns: 2.5fr 1fr; gap: 25px; }
+
+    /* ===== CỘT TRÁI: TRUYỆN HOT ===== */
+    .story-grid-new { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px 15px; }
+    .story-item-new { position: relative; }
+    .cover-wrapper { position: relative; border-radius: 4px; overflow: hidden; aspect-ratio: 3/4; }
+    .cover-wrapper img { width: 100%; height: 100%; object-fit: cover; }
+    .stats-bar { position: absolute; bottom: 0; width: 100%; background: rgba(0,0,0,0.5); color: #fff; font-size: 11px; padding: 4px 8px; display: flex; gap: 10px; }
+    
+    .story-meta-new { margin-top: 8px; }
+.story-title-new {
+    font-weight: bold;
+    font-size: 15px;
+    color: #333;
+    text-decoration: none;
+    display: block;
+    margin-bottom: 6px;
+}
+    .chapter-mini-list { list-style: none; padding: 0; margin: 0; }
+    .chapter-mini-list li { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px; border-bottom: 1px dotted #eee; padding-bottom: 2px; }
+    .chapter-mini-list a { color: #666; text-decoration: none; }
+    .time-ago { color: #aaa; font-style: italic; font-size: 11px; }
+
+    /* ===== CỘT PHẢI: TOP TRUYỆN (SỬA LẠI ĐỂ CHUYỂN TAB) ===== */
+    .top-sidebar {
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    overflow: hidden;
+    background: #fff;
+}
+
+.top-tabs {
+    display: flex;
+    background: #f5f5f5;
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 10px;
+    text-align: center;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+.tab-btn.active {
+    background: #fff;
+    color: #9b59b6;
+    font-weight: bold;
+    border-bottom: 2px solid #9b59b6;
+}
+
+.top-pane {
+    display: none;
+}
+
+.top-pane.active {
+    display: block;
+}
+
+/* ITEM */
+.top-item {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+    gap: 10px;
+}
+
+/* RANK */
+.rank-num {
+    width: 35px;
+    font-size: 18px;
+    font-weight: bold;
+    text-align: center;
+}
+
+.rank-1 { color: #3498db; }
+.rank-2 { color: #2ecc71; }
+.rank-3 { color: #e67e22; }
+
+/* ẢNH */
+.top-thumb {
+    width: 50px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 4px;
+}
+
+/* TEXT */
+.top-info-box {
+    flex: 1;
+    min-width: 0;
+}
+
+.top-name-link {
+    font-size: 14px;
+    font-weight: bold;
+    color: #333;
+    text-decoration: none;
+
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.top-chap {
+    font-size: 12px;
+    color: #777;
+}
+
+/* VIEW */
+.top-view {
+    font-size: 13px;
+    color: #999;
+    white-space: nowrap;
+}
+    .top-sub-meta { font-size: 11px; color: #888; margin-top: 3px; display: flex; justify-content: space-between; }
+
+    /* TRUYỆN MỚI CẬP NHẬT */
+    .update-list { background: #fff; padding: 10px 15px; border-radius: 8px; border: 1px solid #eee; }
+    .update-row { display: grid; grid-template-columns: 3fr 1fr 1fr 1fr; padding: 12px 0; border-bottom: 1px solid #f9f9f9; align-items: center; }
+    .left-main {
+    min-width: 0;
+}
+.right-sidebar {
+    min-width: 300px;
+}
+.top-sidebar {
+    width: 100%;
+    max-width: 350px;
+}
+.story-title-new:hover {
+    color: #e74c3c;
+}
+
+/* CHAPTER LIST */
+.chapter-mini-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.chapter-mini-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    padding: 4px 0;
+    border-bottom: 1px dotted #eee;
+}
+
+/* LINK CHAPTER */
+.chap-link {
+    color: #3498db;
+    text-decoration: none;
+}
+
+.chap-link:hover {
+    text-decoration: underline;
+    color: #e74c3c;
+}
+
+/* THỜI GIAN */
+.time-ago {
+    color: #999;
+    font-size: 11px;
+    font-style: italic;
+}
+
+/* CHƯƠNG MỚI NHẤT (dòng đầu) */
+.chapter-mini-list li:first-child .chap-link {
+    color: #e74c3c;
+    font-weight: bold;
+}
+</style>
+
+<div class="section-title"><span>🔥</span> Truyện Đề Cử</div>
+<div class="swiper recommend-swiper">
+    <div class="swiper-wrapper">
+        {% for story in stories|slice:":10" %}
+        <div class="swiper-slide">
+            <a href="{% url 'story_detail' story.id %}">
+                <div class="recommend-card">
+                    <img src="{{ story.cover.url }}" alt="{{ story.title }}">
+                    <div class="recommend-overlay">
+                        <div class="recommend-name">{{ story.title }}</div>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="main-layout">
+    <div class="left-main">
+        <div class="section-title"><span>🔥</span> Truyện Hot ❯</div>
+        <div class="story-grid-new">
+            {% for story in stories|slice:":12" %}
+            <div class="story-item-new">
+                <div class="cover-wrapper">
+                    <a href="{% url 'story_detail' story.id %}">
+                        <img src="{{ story.cover.url }}" alt="{{ story.title }}">
+                    </a>
+                    <div class="stats-bar">
+                        <span>👁 {{ story.total_views|default:0 }}</span>
+                        <span>💬 {{ story.comments.count }}</span>
+                        <span>❤️ {{ story.followers.count }}</span>
+                    </div>
+                </div>
+                <div class="story-meta-new">
+
+                    <!-- TÊN TRUYỆN -->
+                    <a href="{% url 'story_detail' story.id %}" class="story-title-new">
+                        {{ story.title }}
+                    </a>
+
+                    <!-- 3 CHAPTER MỚI NHẤT -->
+                    <ul class="chapter-mini-list">
+                        {% for chap in story.latest_chaps|slice:":3" %}
+                        <li>
+                            <a href="{% url 'chapter_detail' chap.id %}" class="chap-link">
+                                Chương {{ chap.number }}
+                            </a>
+
+                            <span class="time-ago">
+                                {{ chap.created_at|timesince }} trước
+                            </span>
+                        </li>
+                        {% empty %}
+                        <li>Chưa có chương</li>
+                        {% endfor %}
+                    </ul>
+
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="section-title"><span>■</span> Truyện mới cập nhật</div>
+        <div class="update-list">
+            {% for story in new_updates %}
+            <div class="update-row">
+                <a href="{% url 'story_detail' story.id %}" style="text-decoration:none; color:#333; font-size:14px;">{{ story.title }}</a>
+                <span style="color:#777; font-size:13px;">{{ story.categories.first.name }}</span>
+                <span style="color:#ff7a18; font-size:13px; text-align:center;">{{ story.chapters.count }} chương</span>
+                <span style="color:#999; font-size:12px; text-align:right;">{{ story.latest_chap|timesince }} trước</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <aside class="right-sidebar">
+        <div class="section-title">Bảng xếp hạng</div>
+        <div class="top-sidebar">
+            <div class="top-tabs">
+                <div class="tab-btn active" onclick="switchTop(event, 'top-month')">Top Tháng</div>
+                <div class="tab-btn" onclick="switchTop(event, 'top-week')">Top Tuần</div>
+                <div class="tab-btn" onclick="switchTop(event, 'top-day')">Top Ngày</div>
+            </div>
+
+            <div class="top-content">
+
+                <!-- TOP THÁNG -->
+                <div id="top-month" class="top-pane active">
+                    {% for story in top_month %}
+                    <div class="top-item">
+                        <div class="rank-num rank-{{ forloop.counter }}">
+                            {{ forloop.counter|stringformat:"02d" }}
+                        </div>
+
+                        <img src="{{ story.cover.url }}" class="top-thumb">
+
+                        <div class="top-info-box">
+                            <a href="{% url 'story_detail' story.id %}" class="top-name-link">
+                                {{ story.title }}
+                            </a>
+                            <div class="top-chap">
+                                Chapter {{ story.chapters.count }}
+                            </div>
+                        </div>
+
+                        <div class="top-view">
+                            👁 {{ story.total_views|default:0 }}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- TOP TUẦN -->
+                <div id="top-week" class="top-pane">
+                    {% for story in top_week %}
+                    <div class="top-item">
+                        <div class="rank-num rank-{{ forloop.counter }}">
+                            {{ forloop.counter|stringformat:"02d" }}
+                        </div>
+
+                        <img src="{{ story.cover.url }}" class="top-thumb">
+
+                        <div class="top-info-box">
+                            <a href="{% url 'story_detail' story.id %}" class="top-name-link">
+                                {{ story.title }}
+                            </a>
+                            <div class="top-chap">
+                                Chapter {{ story.chapters.count }}
+                            </div>
+                        </div>
+
+                        <div class="top-view">
+                            👁 {{ story.total_views|default:0 }}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- TOP NGÀY -->
+                <div id="top-day" class="top-pane">
+                    {% for story in top_day %}
+                    <div class="top-item">
+                        <div class="rank-num rank-{{ forloop.counter }}">
+                            {{ forloop.counter|stringformat:"02d" }}
+                        </div>
+
+                        <img src="{{ story.cover.url }}" class="top-thumb">
+
+                        <div class="top-info-box">
+                            <a href="{% url 'story_detail' story.id %}" class="top-name-link">
+                                {{ story.title }}
+                            </a>
+                            <div class="top-chap">
+                                Chapter {{ story.chapters.count }}
+                            </div>
+                        </div>
+
+                        <div class="top-view">
+                            👁 {{ story.total_views|default:0 }}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+            </div>
+        </div>
+        </div>
+    </aside>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+<script>
+    /* Slider cấu hình */
+    var swiper = new Swiper(".recommend-swiper", {
+        slidesPerView: 2, spaceBetween: 15, loop: true,
+        autoplay: { delay: 10000, disableOnInteraction: false },
+        breakpoints: { 640: { slidesPerView: 3 }, 1024: { slidesPerView: 5 } },
+    });
+
+    /* Logic chuyển Tab Bảng xếp hạng */
+    function switchTop(evt, tabId) {
+        // Ẩn tất cả các tab content
+        var panes = document.getElementsByClassName("top-pane");
+        for (var i = 0; i < panes.length; i++) {
+            panes[i].classList.remove("active");
+        }
+
+        // Xóa class active ở tất cả các nút
+        var buttons = document.getElementsByClassName("tab-btn");
+        for (var i = 0; i < buttons.length; i++) {
+            buttons[i].classList.remove("active");
+        }
+
+        // Hiện tab được chọn và thêm active vào nút vừa nhấn
+        document.getElementById(tabId).classList.add("active");
+        evt.currentTarget.classList.add("active");
+    }
+</script>
+{% endblock %}

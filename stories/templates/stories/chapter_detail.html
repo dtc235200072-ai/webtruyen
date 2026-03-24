@@ -1,0 +1,282 @@
+{% extends 'stories/base.html' %}
+
+{% block title %}
+{{ chapter.title }}
+{% endblock %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+    <div class="chapter-nav">
+
+        {% if prev_chapter %}
+            <a href="{% url 'chapter_detail' prev_chapter.id %}" class="nav-btn">
+                ❮ Chap trước
+            </a>
+        {% else %}
+            <span class="nav-btn disabled">❮ Chap trước</span>
+        {% endif %}
+        <a href="{% url 'story_detail' chapter.story.id %}" class="nav-btn center">
+            ☰ Danh sách
+        </a>
+
+        {% if next_chapter %}
+            <a href="{% url 'chapter_detail' next_chapter.id %}" class="nav-btn">
+                Chap sau ❯
+            </a>
+        {% else %}
+            <span class="nav-btn disabled">Chap sau ❯</span>
+        {% endif %}
+
+    </div>
+    <h2 class="mb-3 text-center">Chương {{ chapter.number }}: {{ chapter.title }}</h2>
+    <div style="margin-top:20px;">
+        <h3>🎧 Nghe truyện</h3>
+
+        <div class="audio-bar">
+
+            <button id="playBtn" onclick="toggleAudio()" class="btn-simple">
+                ▶️ Nghe
+            </button>
+
+            <select id="voice">
+                <option value="banmai">Nữ miền Bắc</option>
+                <option value="leminh">Nam miền Bắc</option>
+                <option value="thuminh">Nữ miền Nam</option>
+            </select>
+
+            <select onchange="changeSpeed(this.value)">
+                <option value="0.75">0.75x</option>
+                <option value="1" selected>1x</option>
+                <option value="1.25">1.25x</option>
+                <option value="1.5">1.5x</option>
+            </select>
+            <button id="autoBtn" class="btn-simple" onclick="toggleAuto()">
+                🔊 Auto đọc: OFF
+            </button>
+
+        </div>
+
+        <audio id="player" controls style="width:100%; margin-top:10px;"></audio>
+    </div>
+    
+
+    <div class="reading-box">
+        {{ chapter.content|linebreaks }}
+    </div>
+
+    <hr class="my-4">
+
+    <div class="chapter-nav">
+
+        {% if prev_chapter %}
+            <a href="{% url 'chapter_detail' prev_chapter.id %}" class="nav-btn">
+                ❮ Chap trước
+            </a>
+        {% else %}
+            <span class="nav-btn disabled">❮ Chap trước</span>
+        {% endif %}
+
+        <!-- 👇 chỗ này để trống -->
+        <span></span>
+
+        {% if next_chapter %}
+            <a href="{% url 'chapter_detail' next_chapter.id %}" class="nav-btn">
+                Chap sau ❯
+            </a>
+        {% else %}
+            <span class="nav-btn disabled">Chap sau ❯</span>
+        {% endif %}
+
+    </div>
+    <h4>🔥 Truyện gợi ý</h4>
+
+    <div class="story-suggest">
+        {% for story in suggested_stories %}
+            <div class="story-item">
+                <a href="{% url 'story_detail' story.id %}">
+                    <img src="{{ story.cover.url }}" alt="{{ story.title }}">
+                    <p>{{ story.title }}</p>
+                </a>
+            </div>
+        {% endfor %}
+    </div>
+
+
+</div>
+<script>
+let isPlaying = false;
+let isAuto = false;
+let speed = 1;
+let nextChapterUrl = "{% if next_chapter %}{% url 'chapter_detail' next_chapter.id %}{% endif %}";
+console.log("Next URL:", nextChapterUrl);
+let audioQueue = [];
+let player;
+
+function playNext(resumeTime = 0) {
+    if (audioQueue.length === 0) return;
+
+    let url = audioQueue.shift();
+
+    player.src = url;
+    player.playbackRate = speed;
+
+    player.onloadedmetadata = () => {
+        if (resumeTime > 0) {
+            player.currentTime = resumeTime; // 🔥 set lại vị trí
+            resumeTime = 0;
+        }
+    };
+
+    player.onended = function () {
+        console.log("ENDED AUDIO");
+
+        if (audioQueue.length > 0) {
+            playNext(); // 🔥 vẫn đang phát → không đổi nút
+        } else {
+            let btn = document.getElementById("playBtn");
+            btn.innerText = "▶️ Nghe";
+            isPlaying = false;
+
+            console.log("GO NEXT:", nextChapterUrl);
+
+            if (localStorage.getItem("autoPlay") === "true" && nextChapterUrl) {
+                localStorage.removeItem("audio_time_{{ chapter.id }}");
+                window.location.href = nextChapterUrl;
+            }
+        }
+    };
+
+    player.play();
+}
+
+function pauseAudio() { player.pause();}
+function resumeAudio() { player.play();}
+
+
+function changeSpeed(val) {
+    speed = val;
+    if (player) {
+        player.playbackRate = speed;
+    }
+}
+function playAudio(resumeTime = 0) {
+    player.currentTime = 0;
+
+    let voice = document.getElementById("voice").value;
+    console.log("VOICE", voice);
+    localStorage.setItem("voice", voice);
+    let btn = document.getElementById("playBtn");
+    btn.innerText = "⏸ Dừng";
+    isPlaying = true;
+
+    fetch("/tts/", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            chapter_id: "{{ chapter.id }}",
+            voice: voice
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.urls) {
+            audioQueue = data.urls;
+        } else if (data.url) {
+            audioQueue = [data.url];
+        } else {
+            alert("Không có audio");
+            return;
+        }
+
+        playNext(resumeTime);
+    });
+}
+window.onload = () => {
+
+    player = document.getElementById("player");
+    player.ontimeupdate = () => {
+        localStorage.setItem("audio_time_{{ chapter.id }}", player.currentTime);
+    };
+ 
+
+    // load giọng
+    let savedVoice = localStorage.getItem("voice");
+    if (savedVoice) {
+        document.getElementById("voice").value = savedVoice;
+    }
+
+    // load auto
+    let autoPlay = localStorage.getItem("autoPlay");
+
+    if (autoPlay === "true") {
+        isAuto = true;
+        document.getElementById("autoBtn").innerText = "🔊 Auto đọc: ON";
+        isPlaying = true;
+        playAudio();
+    } else {
+        let savedTime = localStorage.getItem("audio_time_{{ chapter.id }}");
+        if (savedTime) {
+            player.currentTime = savedTime;
+        }
+    }
+
+    // 🔥 đặt event ở đây luôn (an toàn)
+    document.getElementById("voice").addEventListener("change", function () {
+
+        if (!isPlaying) return;
+
+        let currentTime = player.currentTime;
+
+        playAudio(currentTime);
+    });
+};
+function stopAudio() {
+    player.pause();
+    player.currentTime = 0;
+    audioQueue = [];
+
+    localStorage.removeItem("autoPlay"); // 🔥 thêm
+}
+
+
+function toggleAudio() {
+    let btn = document.getElementById("playBtn");
+
+    if (!isPlaying) {
+        if (player.src) {
+            player.play();
+        } else {
+            playAudio();
+        }
+
+        btn.innerText = "⏸ Dừng";
+        isPlaying = true;
+
+    } else {
+        player.pause();
+
+        btn.innerText = "▶️ Nghe";
+        isPlaying = false;
+    }
+}
+
+function toggleAuto() {
+    let btn = document.getElementById("autoBtn");
+
+    let isAuto = localStorage.getItem("autoPlay") === "true";
+
+    if (!isAuto) {
+        btn.innerText = "🔊 Auto đọc: ON";
+        localStorage.setItem("autoPlay", "true");
+        playAudio();
+    } else {
+        btn.innerText = "🔇 Auto đọc: OFF";
+        localStorage.removeItem("autoPlay");
+    }
+}
+</script>
+{% endblock %}

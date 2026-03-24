@@ -1,0 +1,163 @@
+{% extends 'stories/base.html' %}
+
+{% block content %}
+
+<div class="layout">
+
+    <!-- LEFT -->
+    <div class="main-content">
+
+        <h3>📖 Lịch sử đọc</h3>
+
+        {% if not user.is_authenticated %}
+
+            <div class="empty-box">
+                <p>🔒 Bạn cần đăng nhập</p>
+                <a href="{% url 'login' %}?next={% url 'reading_history' %}" class="btn-login">
+                    Đăng nhập
+                </a>
+            </div>
+
+        {% elif histories %}
+
+            {% for h in histories %}
+            <div class="follow-item">
+
+                <!-- ảnh -->
+                {% if h.story.cover %}
+                    <img src="{{ h.story.cover.url }}">
+                {% else %}
+                    <img src="/static/no-image.jpg">
+                {% endif %}
+
+                <!-- info -->
+                <div>
+                    <a href="{% url 'story_detail' h.story.id %}">
+                        {{ h.story.title }}
+                    </a>
+
+                    <div style="font-size:13px; color:#888;">
+                        Đã đọc đến Chapter {{ h.chapter.number }}
+                    </div>
+
+                    <a href="{% url 'chapter_detail' h.chapter.id %}" style="color:#ff6a00;">
+                        Đọc tiếp →
+                    </a>
+                </div>
+
+            </div>
+            {% endfor %}
+
+        {% else %}
+
+            <div class="empty-box">
+                <p>📭 Chưa có lịch sử đọc</p>
+            </div>
+
+        {% endif %}
+
+    </div>
+
+    <!-- RIGHT (TOP TRUYỆN) -->
+    <div class="sidebar">
+
+        <div class="top-box">
+
+            <div class="tab">
+                <div class="tab-item active" onclick="showTab('month', this)">Top Tháng</div>
+                <div class="tab-item" onclick="showTab('week', this)">Top Tuần</div>
+                <div class="tab-item" onclick="showTab('day', this)">Top Ngày</div>
+            </div>
+
+            <!-- MONTH -->
+            <div id="month" class="tab-content active">
+                {% for s in top_month %}
+                <div class="top-item">
+                    <div class="rank">{{ forloop.counter|stringformat:"02d" }}</div>
+
+                    {% if s.cover %}
+                        <img src="{{ s.cover.url }}">
+                    {% endif %}
+
+                    <div>
+                        <div>{{ s.title|truncatechars:25 }}</div>
+
+                        {% if s.chapters.last %}
+                            <div class="meta">
+                                Chapter {{ s.chapters.last.number }}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- WEEK -->
+            <div id="week" class="tab-content">
+                {% for s in top_week %}
+                <div class="top-item">
+                    <div class="rank">{{ forloop.counter|stringformat:"02d" }}</div>
+
+                    {% if s.cover %}
+                        <img src="{{ s.cover.url }}">
+                    {% endif %}
+
+                    <div>
+                        <div>{{ s.title|truncatechars:25 }}</div>
+
+                        {% if s.chapters.last %}
+                            <div class="meta">
+                                Chapter {{ s.chapters.last.number }}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- DAY -->
+            <div id="day" class="tab-content">
+                {% for s in top_day %}
+                <div class="top-item">
+                    <div class="rank">{{ forloop.counter|stringformat:"02d" }}</div>
+
+                    {% if s.cover %}
+                        <img src="{{ s.cover.url }}">
+                    {% endif %}
+
+                    <div>
+                        <div>{{ s.title|truncatechars:25 }}</div>
+
+                        {% if s.chapters.last %}
+                            <div class="meta">
+                                Chapter {{ s.chapters.last.number }}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- JS TAB -->
+<script>
+function showTab(type, el) {
+    document.querySelectorAll(".tab-content").forEach(c => {
+        c.classList.remove("active");
+    });
+
+    document.querySelectorAll(".tab-item").forEach(btn => {
+        btn.classList.remove("active");
+    });
+
+    document.getElementById(type).classList.add("active");
+    el.classList.add("active");
+}
+</script>
+
+{% endblock %}

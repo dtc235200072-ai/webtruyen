@@ -1,0 +1,209 @@
+{% extends 'stories/base.html' %}
+
+{% block content %}
+<style>
+.category-container {
+    display: grid;
+    grid-template-columns: 3fr 1fr;
+    gap: 25px;
+}
+
+/* ===== CARD ===== */
+.story-row {
+    display: flex;
+    gap: 15px;
+    padding: 12px;
+    background: #fff;
+    border-radius: 10px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    transition: 0.2s;
+}
+
+.story-row:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+}
+
+/* ảnh */
+.story-row img {
+    width: 120px;
+    height: 160px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+/* info */
+.story-info h3 {
+    margin: 0;
+    font-size: 18px;   
+    font-weight: 600;
+}
+
+.story-info h3 a {
+    text-decoration: none;
+    color: #222;
+}
+
+.story-info h3 a:hover {
+    color: #ff6600;
+}
+
+/* meta */
+.meta {
+    font-size: 13px;
+    color: #888;
+    margin: 6px 0;
+}
+
+/* chapter */
+.chapter-list a {
+    display: inline-block;
+    background: #f0f0f0;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 13px;   /* tăng */
+    margin-right: 6px;
+    text-decoration: none;
+    color: #444;
+}
+
+.chapter-list a:hover {
+    background: #ff6600;
+    color: white;
+}
+
+/* ===== SIDEBAR ===== */
+.sidebar {
+    background: #fff;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+
+.sidebar h3 {
+    margin-top: 0;
+}
+
+/* top item */
+.top-item {
+    display: flex;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.rank {
+    font-weight: bold;
+    color: #ff6600;
+    width: 25px;
+}
+
+/* title */
+.top-title a {
+    text-decoration: none;
+    color: #333;
+}
+
+.top-title a:hover {
+    color: #ff6600;
+}
+
+/* tiêu đề */
+.category-header {
+    background: #fff;
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 15px;
+}
+
+.category-header h2 {
+    margin: 0;
+}
+.meta div {
+    margin: 4px 0;
+    font-size: 15px;   
+    color: #666;
+}
+.story-row {
+    gap: 18px;        /* tăng khoảng cách */
+    padding: 15px;    /* thoáng hơn */
+}
+</style>
+<div class="category-container">
+
+    <!-- LEFT -->
+    <div>
+
+        <div class="category-header">
+            <h2>📚 {{ category.name|upper }}</h2>
+            <p>{{ category.description }}</p>
+        </div>
+
+        {% for story in stories %}
+        <div class="story-row">
+
+            <a href="{% url 'story_detail' story.id %}">
+                {% if story.cover %}
+                    <img src="{{ story.cover.url }}">
+                {% else %}
+                    <img src="/static/default.jpg">
+                {% endif %}
+            </a>
+
+            <div class="story-info">
+                <h3>
+                    <a href="{% url 'story_detail' story.id %}">
+                        {{ story.title }}
+                    </a>
+
+                    {% if story.is_completed %}
+                        <span style="color:green;font-size:12px;">✔ FULL</span>
+                    {% endif %}
+                </h3>
+
+                <div class="meta">
+                    <div>Tác giả: {{ story.author }}</div>
+
+                    <div>
+                        Thể loại:
+                        {% for cate in story.categories.all %}
+                            {{ cate.name }}{% if not forloop.last %}, {% endif %}
+                        {% endfor %}
+                    </div>
+
+                    <div>Số chương: {{ story.chapters.count }}</div>
+
+                    <div>Lượt xem: {{ story.total_views_sum|default:0 }}</div>
+                </div>
+
+
+            </div>
+
+        </div>
+        {% endfor %}
+
+    </div>
+
+    <!-- RIGHT -->
+    <div class="sidebar">
+        <h3>🔥 TOP TRUYỆN</h3>
+
+        {% for story in top_stories %}
+        <div class="top-item">
+            <div class="rank">#{{ forloop.counter }}</div>
+
+            <div class="top-title">
+                <a href="{% url 'story_detail' story.id %}">
+                    {{ story.title }}
+                </a>
+                <div style="font-size:12px;color:#888;">
+                    {{ story.categories.first.name }}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,207 @@
+{% extends 'stories/base.html' %}
+
+{% block content %}
+<style>
+    /* Khung bao ngoài form đăng ký */
+    .register-wrapper {
+    max-width: 500px;
+    margin: 60px auto;
+    padding: 30px;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+}
+
+    /* Tiêu đề ĐĂNG KÝ với gạch chân hồng đậm */
+    .register-wrapper h2 {
+        font-size: 26px;
+        font-weight: 800;
+        text-transform: uppercase;
+        margin-bottom: 30px;
+        color: #333;
+        position: relative;
+        text-align: center;
+    }
+    .register-wrapper h2::after {
+        content: "";
+        display: block;
+        width: 50px;
+        height: 4px;
+        background-color: #e91e63; /* Màu hồng đặc trưng */
+        margin: 8px auto 0;
+    }
+
+    /* Định dạng nhãn và ô nhập liệu */
+    .form-group {
+        margin-bottom: 22px;
+    }
+    .form-group label {
+        display: block;
+        font-weight: 500;
+        margin-bottom: 8px;
+        color: #666;
+        font-size: 15px;
+    }
+    .form-group input {
+        width: 100%;
+        padding: 12px 15px;
+        border: 1px solid #dbdbdb;
+        border-radius: 6px;
+        font-size: 15px;
+        color: #333;
+        box-sizing: border-box;
+        background-color: #fff;
+        transition: border-color 0.2s;
+    }
+    .form-group input::placeholder {
+        color: #bcbcbc;
+    }
+    .form-group input:focus {
+        outline: none;
+        border-color: #aaa;
+    }
+
+    /* Link điều hướng đăng nhập nằm bên phải */
+    .auth-navigation {
+        text-align: right;
+        margin-bottom: 20px;
+    }
+    .auth-navigation a {
+        color: #3498db;
+        text-decoration: none;
+        font-size: 14px;
+    }
+    .auth-navigation a:hover {
+        text-decoration: underline;
+    }
+
+    /* Nút Đăng ký màu vàng bo góc */
+    .btn-submit-yellow {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, #ff7a18, #ffb347);
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 16px;
+    color: white;
+    cursor: pointer;
+    transition: 0.3s;
+    margin-top: 10px;
+}
+
+.btn-submit-yellow:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+    /* Thông báo lỗi nếu có */
+    .error-msg {
+        color: #e74c3c;
+        font-size: 13px;
+        margin-top: 5px;
+    }
+    .form-group input:focus {
+    border-color: #ff7a18;
+    box-shadow: 0 0 5px rgba(255,122,24,0.3);
+}
+.form-group {
+    width: 100%;
+}
+
+.form-group input {
+    width: 100%;
+}
+</style>
+
+<div class="register-wrapper">
+    <h2>Đăng ký</h2>
+
+    <form method="post">
+        {% csrf_token %}
+        {% if form.errors %}
+            <div style="background:#ffe6e6; padding:10px; border-radius:6px; margin-bottom:15px;">
+                ⚠ Vui lòng kiểm tra lại thông tin
+            </div>
+        {% endif %}
+        <div class="form-group">
+            <label for="id_username">Name</label>
+            <input type="text" name="username" id="id_username" placeholder="Name" required autofocus>
+            {% if form.username.errors %}<div class="error-msg">{{ form.username.errors.0 }}</div>{% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="id_email">Email</label>
+            <input type="email" name="email" id="id_email" placeholder="Email" required>
+            {% if form.email.errors %}<div class="error-msg">{{ form.email.errors.0 }}</div>{% endif %}
+        </div>
+
+        <div class="form-group">
+            <label>Mật khẩu</label>
+
+            <div style="position: relative;">
+                <input type="password" name="password1" id="password1" placeholder="Mật khẩu" required>
+
+                <span onclick="togglePassword('password1')" 
+                    style="position:absolute; right:12px; top:50%; transform:translateY(-50%); font-size:14px; color:#888;" >
+                    👁
+                </span>
+            </div>
+
+            <div id="password-strength" style="font-size:12px; margin-top:5px;"></div>
+
+            {% if form.password1.errors %}
+                <div class="error-msg">{{ form.password1.errors.0 }}</div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label>Xác nhận mật khẩu</label>
+
+            <div style="position: relative;">
+                <input type="password" name="password2" id="password2" placeholder="Xác nhận mật khẩu" required>
+
+                <span onclick="togglePassword('password2')" 
+                    style="position:absolute; right:12px; top:50%; transform:translateY(-50%); font-size:14px; color:#888;">
+                    👁
+                </span>
+            </div>
+
+            {% if form.password2.errors %}
+                <div class="error-msg">{{ form.password2.errors.0 }}</div>
+            {% endif %}
+        </div>
+
+        <div class="auth-navigation">
+            <a href="{% url 'login' %}">Đăng nhập</a>
+        </div>
+
+        <button type="submit" class="btn-submit-yellow">Đăng ký</button>
+        {% if messages %}
+            {% for message in messages %}
+                <div style="color:red; margin-bottom:10px;">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    </form>
+</div>
+<script>
+function togglePassword(id) {
+    let input = document.getElementById(id);
+    input.type = input.type === "password" ? "text" : "password";
+}
+document.getElementById('password1').addEventListener('input', function() {
+    let val = this.value;
+    let strength = "Yếu";
+
+    if (val.length > 8 && /[A-Z]/.test(val) && /\d/.test(val)) {
+        strength = "Mạnh";
+    } else if (val.length > 5) {
+        strength = "Trung bình";
+    }
+
+    document.getElementById('password-strength').innerText = "Độ mạnh: " + strength;
+});
+</script>
+{% endblock %}

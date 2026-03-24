@@ -1,0 +1,42 @@
+<h3>📖 Lịch sử đọc</h3>
+
+{% if not user.is_authenticated %}
+
+    <div class="empty-box">
+        <p>🔒 Bạn cần đăng nhập</p>
+        <a href="{% url 'login' %}" class="btn-login">Đăng nhập</a>
+    </div>
+
+{% elif histories %}
+
+    {% for h in histories %}
+    <div class="follow-item">
+
+        {% if h.story.cover %}
+            <img src="{{ h.story.cover.url }}">
+        {% endif %}
+
+        <div>
+            <a href="{% url 'story_detail' h.story.id %}">
+                {{ h.story.title }}
+            </a>
+
+            <div style="font-size:13px; color:#888;">
+                Đã đọc đến Chapter {{ h.chapter.number }}
+            </div>
+
+            <a href="{% url 'chapter_detail' h.chapter.id %}">
+                Đọc tiếp →
+            </a>
+        </div>
+
+    </div>
+    {% endfor %}
+
+{% else %}
+
+    <div class="empty-box">
+        <p>📭 Chưa có lịch sử đọc</p>
+    </div>
+
+{% endif %}

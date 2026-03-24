@@ -1,0 +1,56 @@
+{% extends 'stories/base.html' %}
+
+{% block title %}Tìm kiếm{% endblock %}
+
+{% block content %}
+
+<div class="main-layout">
+
+    <!-- LEFT -->
+    <div class="main-content">
+
+        <h2>
+            🔍 Kết quả cho: 
+            <span style="color:#ff7a18;">"{{ search_query }}"</span>
+        </h2>
+
+        {% if stories %}
+        <div class="story-grid">
+            {% for story in stories %}
+            <div class="story-card">
+
+                <a href="{% url 'story_detail' story.id %}">
+                    <img src="{{ story.cover.url }}">
+                </a>
+
+                <div class="story-title">
+                    {{ story.title }}
+                </div>
+
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+            <p>Không tìm thấy kết quả</p>
+        {% endif %}
+
+    </div>
+
+    <!-- RIGHT SIDEBAR -->
+    <div class="sidebar">
+        <h3>Thể loại</h3>
+
+        <div class="category-list">
+            <a href="{% url 'story_list' %}" class="cat-item all">Tất cả</a>
+
+            {% for cat in all_categories %}
+                <a href="{% url 'stories_by_category' cat.slug %}" class="cat-item">
+                    {{ cat.name }}
+                </a>
+            {% endfor %}
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}
